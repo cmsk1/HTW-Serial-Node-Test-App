@@ -1,0 +1,105 @@
+<h5 class="mt-3">Einstellungen:</h5>
+<div *ngIf="loraSetting" class="row">
+  <div class="col-8">
+    <div class="label">Port</div>
+    <div class="input-group input-group-sm">
+      <select (change)="selectPort(selectedPortId)" [(ngModel)]="selectedPortId" class="form-select form-select-sm">
+        <option *ngFor="let port of ports" [value]="port.path">{{port.comName}}</option>
+      </select>
+      <button (click)="getAllPorts()" class="btn btn-sm btn-success">Update</button>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="label">Adresse des Test-Moduls</div>
+    <div><input [(ngModel)]="loraSetting.address" [disabled]="loraSetting.addressIsSet" class="form-control form-control-sm" max="255" min="0" type="number"></div>
+  </div>
+</div>
+<hr>
+<h5>Status</h5>
+<div *ngIf="selectedPort" class="row">
+  <div class="col-3">
+    <div class="label">COM Name</div>
+    <div>{{selectedPort.comName}}</div>
+  </div>
+  <div class="col-3">
+    <div class="label">Status</div>
+    <div *ngIf="connected === 'CONNECTED'" class="fw-bold text-success">Verbunden</div>
+    <div *ngIf="connected === 'ERROR'" class="fw-bold text-danger">Fehler</div>
+    <div *ngIf="connected === 'CONNECTING'" class="fw-bold text-warning">Verbindet</div>
+    <div *ngIf="connected === 'NOT_CONNECTED'" class="fw-bold text-secondary">Nicht verbunden</div>
+  </div>
+
+  <div class="col-12 mt-1">
+    <button (click)="connectToPort()" *ngIf="connected !== 'CONNECTED'" class="btn btn-sm me-2 btn-primary">Verbinden</button>
+    <button (click)="closePort()" *ngIf="connected === 'CONNECTED'" class="btn btn-sm me-2 btn-danger">Trennen</button>
+  </div>
+</div>
+<hr>
+<div class="row my-3">
+  <div class="col-6 border-end">
+    <h5>Konsole:</h5>
+    <div class="overflow-auto border rounded w-100 mb-3 p-3" style="height: 500px">
+      <pre *ngFor="let rawItem of rawData" [ngClass]="{'green-text': rawItem.isSend}" class="d-block m-0" style="overflow-x: hidden"><span>{{rawItem.date | date:'dd.MM.yy HH:mm:ss'}}</span> - {{rawItem.data}}</pre>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="label">Befehl senden</div>
+        <div class="input-group input-group-sm mb-3">
+          <input [(ngModel)]="inputStringRaw" class="form-control form-control-sm" placeholder="Befehl eingeben" type="text">
+          <button (click)="sendRawMessage()" class="btn btn-sm btn-secondary">Senden</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 border-end">
+    <h5>ACK:</h5>
+    <div class="row">
+      <div class="col-6">hopAddress:<input [(ngModel)]="ack.hopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6">prevHopAddress:<input [(ngModel)]="ack.prevHopAddress" type="number" class="form-control form-control-sm"></div>
+    </div>
+    <button class="btn btn-sm btn-primary d-block mb-2" (click)="sendTestPackage(ack)">Send ACK</button>
+    <h5>RREQ:</h5>
+    <div class="row">
+      <div class="col-6 small">hopAddress:<input [(ngModel)]="rreq.requestId" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">originSequence:<input [(ngModel)]="rreq.originSequence" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">originAddress:<input [(ngModel)]="rreq.originAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">destAddress:<input [(ngModel)]="rreq.destAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopCount:<input [(ngModel)]="rreq.hopCount" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">destSequence:<input [(ngModel)]="rreq.destSequence" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopAddress:<input [(ngModel)]="rreq.hopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">prevHopAddress:<input [(ngModel)]="rreq.prevHopAddress" type="number" class="form-control form-control-sm"></div>
+    </div>
+    <button class="btn btn-sm btn-primary d-block mb-2" (click)="sendTestPackage(rreq)">Send RREQ</button>
+    <h5>RREP:</h5>
+    <div class="row">
+      <div class="col-6 small">requestId:<input [(ngModel)]="rrep.requestId" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopCount:<input [(ngModel)]="rrep.hopCount" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">originAddress:<input [(ngModel)]="rrep.originAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">destSequence:<input [(ngModel)]="rrep.destSequence" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">ttl:<input [(ngModel)]="rrep.ttl" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">destAddress:<input [(ngModel)]="rrep.destAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopAddress:<input [(ngModel)]="rrep.hopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">prevHopAddress:<input [(ngModel)]="rrep.prevHopAddress" type="number" class="form-control form-control-sm"></div>
+    </div>
+    <button class="btn btn-sm btn-primary d-block mb-2" (click)="sendTestPackage(rrep)">Send RREP</button>
+    <h5>MSG:</h5>
+    <div class="row">
+      <div class="col-6 small">destAddress:<input [(ngModel)]="msg.destAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopCount:<input [(ngModel)]="msg.hopCount" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">sequence:<input [(ngModel)]="msg.sequence" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">prevHopAddress:<input [(ngModel)]="msg.prevHopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">hopAddress:<input [(ngModel)]="msg.hopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">msg:<input [(ngModel)]="msg.msg" type="text" class="form-control form-control-sm"></div>
+    </div>
+    <button class="btn btn-sm btn-primary d-block mb-2" (click)="sendTestPackage(msg)">Send MSG</button>
+    <h5>RERR:</h5>
+    <div class="row">
+      <div class="col-6 small">hopAddress:<input [(ngModel)]="rerr.hopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">prevHopAddress:<input [(ngModel)]="rerr.prevHopAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">path 0 - destAddress:<input [(ngModel)]="rerr.paths[0].destAddress" type="number" class="form-control form-control-sm"></div>
+      <div class="col-6 small">path 0 - destSequence:<input [(ngModel)]="rerr.paths[0].destSequence" type="number" class="form-control form-control-sm"></div>
+    </div>
+    <button class="btn btn-sm btn-primary d-block mb-2" (click)="sendTestPackage(rerr)">Send MSG</button>
+
+  </div>
+</div>
